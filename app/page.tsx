@@ -157,12 +157,7 @@ export default function HomePage() {
       <div className="w-full overflow-hidden mb-16 py-2 relative">
         <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-[#0d0d0f] to-transparent z-10 pointer-events-none" />
         <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-[#0d0d0f] to-transparent z-10 pointer-events-none" />
-        <div
-          className="flex gap-4 w-max"
-          style={{
-            animation: "marquee 30s linear infinite",
-          }}
-        >
+        <div className="flex gap-4 w-max animate-marquee">
           {[...FEATURES, ...FEATURES].map((card, i) => (
             <div
               key={i}
@@ -174,13 +169,6 @@ export default function HomePage() {
           ))}
         </div>
       </div>
-
-      <style jsx global>{`
-        @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-      `}</style>
 
       {/* CTA */}
       <div className="flex justify-center px-8 pb-24">
