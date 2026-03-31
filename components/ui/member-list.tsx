@@ -28,7 +28,7 @@ export interface Client {
 const statusConfig = {
   'active': { label: 'Active', color: 'bg-[#0f2820] text-[#34d399]' },
   'docs-due': { label: 'Docs due', color: 'bg-[#2a1f0e] text-[#f59e0b]' },
-  'review': { label: 'Review', color: 'bg-[#1a2d4a] text-[#4f8ef7]' },
+  'review': { label: 'Review', color: 'bg-[#262200] text-[#FEED55]' },
   'irs-notice': { label: 'IRS notice', color: 'bg-[#2a1010] text-[#f87171]' },
   'inactive': { label: 'Inactive', color: 'bg-[#1a1a1e] text-[#555]' },
 };
@@ -56,7 +56,7 @@ function AvatarImage({ className, ...props }: React.ComponentProps<typeof Avatar
 function AvatarFallback({ className, ...props }: React.ComponentProps<typeof AvatarPrimitive.Fallback>) {
   return (
     <AvatarPrimitive.Fallback
-      className={cn('bg-[#1a2d4a] text-[#4f8ef7] flex size-full items-center justify-center rounded-[7px] text-[11px] font-semibold', className)}
+      className={cn('bg-[#262200] text-[#FEED55] flex size-full items-center justify-center rounded-[7px] text-[11px] font-semibold', className)}
       {...props}
     />
   );

@@ -46,7 +46,7 @@ export default function CompliancePage() {
       <div className="w-[220px] flex-shrink-0 bg-[#111113] border-r border-[#1e1e22] flex flex-col py-5">
         <div className="px-5 pb-6 border-b border-[#1e1e22] mb-4">
           <div className="text-[18px] font-semibold tracking-tight text-white">
-            cler<span className="text-[#4f8ef7]">q</span>
+            cler<span className="text-[#FEED55]">q</span>
           </div>
           <div className="text-[11px] text-[#555] mt-0.5 tracking-widest font-mono">CPA WORKFLOW</div>
         </div>
@@ -64,11 +64,11 @@ export default function CompliancePage() {
         </div>
         <div className="px-3 mt-2">
           <div className="text-[10px] font-medium text-[#444] tracking-widest uppercase px-2 mb-1">Settings</div>
-          <Link href="/settings/compliance" className="flex items-center gap-2.5 px-2.5 py-2 rounded-[7px] text-[13.5px] bg-[#1c2538] text-[#6a9fff]">Compliance</Link>
+          <Link href="/settings/compliance" className="flex items-center gap-2.5 px-2.5 py-2 rounded-[7px] text-[13.5px] bg-[#1f1d00] text-[#ffe566]">Compliance</Link>
         </div>
         <div className="mt-auto px-5 pt-4 border-t border-[#1e1e22]">
           <div className="flex items-center gap-2.5">
-            <div className="w-[30px] h-[30px] rounded-full bg-gradient-to-br from-[#1e3a5f] to-[#4f8ef7] flex items-center justify-center text-[11px] font-semibold text-[#aac8ff]">TR</div>
+            <div className="w-[30px] h-[30px] rounded-full bg-gradient-to-br from-[#262200] to-[#FEED55] flex items-center justify-center text-[11px] font-semibold text-[#fff8d0]">TR</div>
             <div>
               <div className="text-[13px] font-medium text-[#bbb]">Taran R.</div>
               <div className="text-[11px] text-[#555]">Pro plan</div>
@@ -100,7 +100,7 @@ export default function CompliancePage() {
                     className="h-full rounded-full transition-all"
                     style={{
                       width: `${pct}%`,
-                      backgroundColor: pct === 100 ? "#34d399" : pct > 70 ? "#4f8ef7" : "#f59e0b"
+                      backgroundColor: pct === 100 ? "#34d399" : pct > 70 ? "#FEED55" : "#f59e0b"
                     }}
                   />
                 </div>

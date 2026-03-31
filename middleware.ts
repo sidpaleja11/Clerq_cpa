@@ -2,17 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
 // Routes that don't require authentication
-const PUBLIC_ROUTES = ['/login', '/signup', '/mfa-verify', '/auth/callback', '/api/auth/']
+const PUBLIC_ROUTES = ['/', '/login', '/signup', '/mfa-verify', '/auth/callback', '/api/auth/']
 // Routes that require AAL2 (MFA verified)
 const MFA_EXEMPT_ROUTES = ['/mfa-verify', '/auth/callback']
 
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000 // 30 minutes
 
 export async function middleware(request: NextRequest) {
-  // DEV BYPASS — remove before production
-  return NextResponse.next()
-
-  // eslint-disable-next-line no-unreachable
   const { pathname } = request.nextUrl
   const response = NextResponse.next({
     request: { headers: request.headers },

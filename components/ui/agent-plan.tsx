@@ -163,7 +163,7 @@ export default function Plan() {
                       {task.status === "completed" ? (
                         <CheckCircle2 className="h-4 w-4 text-[#34d399]" />
                       ) : task.status === "in-progress" ? (
-                        <CircleDotDashed className="h-4 w-4 text-[#4f8ef7]" />
+                        <CircleDotDashed className="h-4 w-4 text-[#FEED55]" />
                       ) : task.status === "need-help" ? (
                         <CircleAlert className="h-4 w-4 text-[#f59e0b]" />
                       ) : task.status === "failed" ? (
@@ -184,7 +184,7 @@ export default function Plan() {
                       </div>
                       <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-[4px] flex-shrink-0 ${
                         task.status === "completed" ? "bg-[#0f2820] text-[#34d399]"
-                        : task.status === "in-progress" ? "bg-[#1a2d4a] text-[#4f8ef7]"
+                        : task.status === "in-progress" ? "bg-[#262200] text-[#FEED55]"
                         : task.status === "need-help" ? "bg-[#2a1f0e] text-[#f59e0b]"
                         : task.status === "failed" ? "bg-[#2a1010] text-[#f87171]"
                         : "bg-[#1a1a1e] text-[#555]"
@@ -229,7 +229,7 @@ export default function Plan() {
                                     {subtask.status === "completed" ? (
                                       <CheckCircle2 className="h-3.5 w-3.5 text-[#34d399]" />
                                     ) : subtask.status === "in-progress" ? (
-                                      <CircleDotDashed className="h-3.5 w-3.5 text-[#4f8ef7]" />
+                                      <CircleDotDashed className="h-3.5 w-3.5 text-[#FEED55]" />
                                     ) : subtask.status === "need-help" ? (
                                       <CircleAlert className="h-3.5 w-3.5 text-[#f59e0b]" />
                                     ) : (

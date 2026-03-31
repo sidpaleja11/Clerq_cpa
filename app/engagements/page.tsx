@@ -77,7 +77,7 @@ export default function EngagementsPage() {
       <div className="w-[220px] flex-shrink-0 bg-[#111113] border-r border-[#1e1e22] flex flex-col py-5">
         <div className="px-5 pb-6 border-b border-[#1e1e22] mb-4">
           <div className="text-[18px] font-semibold tracking-tight text-white">
-            cler<span className="text-[#4f8ef7]">q</span>
+            cler<span className="text-[#FEED55]">q</span>
           </div>
           <div className="text-[11px] text-[#555] mt-0.5 tracking-widest font-mono">CPA WORKFLOW</div>
         </div>
@@ -91,7 +91,7 @@ export default function EngagementsPage() {
         <div className="px-3 mt-2 mb-2">
           <div className="text-[10px] font-medium text-[#444] tracking-widest uppercase px-2 mb-1">AI Tools</div>
           <Link href="/compose" className="flex items-center gap-2.5 px-2.5 py-2 rounded-[7px] text-[13.5px] text-[#666] hover:bg-[#1a1a1e] hover:text-[#aaa] transition-all">Compose Email</Link>
-          <Link href="/engagements" className="flex items-center gap-2.5 px-2.5 py-2 rounded-[7px] text-[13.5px] bg-[#1c2538] text-[#6a9fff]">Engagements</Link>
+          <Link href="/engagements" className="flex items-center gap-2.5 px-2.5 py-2 rounded-[7px] text-[13.5px] bg-[#1f1d00] text-[#ffe566]">Engagements</Link>
         </div>
         <div className="px-3 mt-2">
           <div className="text-[10px] font-medium text-[#444] tracking-widest uppercase px-2 mb-1">Settings</div>
@@ -99,7 +99,7 @@ export default function EngagementsPage() {
         </div>
         <div className="mt-auto px-5 pt-4 border-t border-[#1e1e22]">
           <div className="flex items-center gap-2.5">
-            <div className="w-[30px] h-[30px] rounded-full bg-gradient-to-br from-[#1e3a5f] to-[#4f8ef7] flex items-center justify-center text-[11px] font-semibold text-[#aac8ff]">TR</div>
+            <div className="w-[30px] h-[30px] rounded-full bg-gradient-to-br from-[#262200] to-[#FEED55] flex items-center justify-center text-[11px] font-semibold text-[#fff8d0]">TR</div>
             <div>
               <div className="text-[13px] font-medium text-[#bbb]">Taran R.</div>
               <div className="text-[11px] text-[#555]">Pro plan</div>
@@ -112,7 +112,7 @@ export default function EngagementsPage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex items-center justify-between px-7 py-[18px] border-b border-[#1a1a1e] bg-[#0d0d0f]">
           <div className="text-[15px] font-medium text-[#ddd]">Engagements</div>
-          <button className="px-3.5 py-1.5 rounded-[7px] text-[13px] font-medium bg-[#4f8ef7] text-white hover:bg-[#5d99ff] transition-all">
+          <button className="px-3.5 py-1.5 rounded-[7px] text-[13px] font-medium bg-[#FEED55] text-[#0d0d0f] hover:bg-[#ffe566] transition-all">
             + New Engagement
           </button>
         </div>
@@ -166,7 +166,7 @@ export default function EngagementsPage() {
                       onClick={() => toggle(eng.id)}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-7 h-7 rounded-[7px] bg-[#1a2d4a] text-[#4f8ef7] flex items-center justify-center text-[11px] font-semibold flex-shrink-0">
+                        <div className="w-7 h-7 rounded-[7px] bg-[#262200] text-[#FEED55] flex items-center justify-center text-[11px] font-semibold flex-shrink-0">
                           {initials}
                         </div>
                         <div className="flex items-center gap-2">
@@ -206,7 +206,7 @@ export default function EngagementsPage() {
                             <div className="space-y-2">
                               {eng.scope.map((item, i) => (
                                 <div key={i} className="flex items-center gap-2.5">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-[#4f8ef7] flex-shrink-0" />
+                                  <div className="w-1.5 h-1.5 rounded-full bg-[#FEED55] flex-shrink-0" />
                                   <span className="text-[12px] text-[#aaa]">{item}</span>
                                 </div>
                               ))}

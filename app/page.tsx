@@ -3,6 +3,8 @@
 import Link from "next/link"
 import { useState } from "react"
 import { PromptInputBox } from "@/components/ui/ai-prompt-box"
+import { SpecialText } from "@/components/ui/special-text"
+import { FloatingPaths } from "@/components/ui/background-paths"
 
 const DEMO_RESPONSE = `Hi Sarah,
 
@@ -20,12 +22,12 @@ Best,
 [Your Name], CPA`
 
 const FEATURES = [
-  { title: "AI Email Hub", desc: "Draft every client email in your voice. SSTS 7 logged automatically.", color: "text-[#4f8ef7]" },
+  { title: "AI Email Hub", desc: "Draft every client email in your voice. SSTS 7 logged automatically.", color: "text-[#FEED55]" },
   { title: "Document Collection", desc: "Auto-generate organizers, track missing docs.", color: "text-[#34d399]" },
   { title: "Engagement Letters", desc: "AICPA templates, e-signature built in. 60 seconds per client.", color: "text-[#a78bfa]" },
   { title: "Client Onboarding", desc: "Intake → 7216 consent → organizer. Fully automated.", color: "text-[#f59e0b]" },
   { title: "Invoicing & Payments", desc: "Automated reminders at 7, 14, 30, 60 days. Stripe Connect.", color: "text-[#f87171]" },
-  { title: "Compliance Built In", desc: "WISP, FTC Safeguards checklist, breach notification workflow.", color: "text-[#4f8ef7]" },
+  { title: "Compliance Built In", desc: "WISP, FTC Safeguards checklist, breach notification workflow.", color: "text-[#FEED55]" },
   { title: "IRS Notice Tracker", desc: "Identifies notices, sets deadlines, drafts response letters.", color: "text-[#34d399]" },
   { title: "Client Portal", desc: "Secure upload, preview, and acknowledgment. Consumer-grade simple.", color: "text-[#a78bfa]" },
 ]
@@ -49,27 +51,30 @@ export default function HomePage() {
       {/* Nav */}
       <nav className="flex items-center justify-between px-8 py-5 border-b border-[#1e1e22]">
         <div className="text-[20px] font-semibold tracking-tight text-white">
-          cler<span className="text-[#4f8ef7]">q</span>
+          cler<span className="text-[#FEED55]">q</span>
         </div>
         <div className="flex items-center gap-3">
           <Link href="/dashboard" className="text-[13px] text-[#666] hover:text-[#aaa] transition-all px-3 py-1.5">
             Sign in
           </Link>
-          <Link href="/dashboard" className="text-[13px] font-medium bg-[#4f8ef7] text-white px-4 py-1.5 rounded-[7px] hover:bg-[#5d99ff] transition-all">
+          <Link href="/dashboard" className="text-[13px] font-medium bg-[#FEED55] text-[#0d0d0f] px-4 py-1.5 rounded-[7px] hover:bg-[#ffe566] transition-all">
             Get started
           </Link>
         </div>
       </nav>
 
       {/* Hero */}
-      <div className="flex flex-col items-center px-8 py-24 text-center">
-        <div className="text-[11px] font-mono px-3 py-1 rounded-full bg-[#1a2d4a] text-[#4f8ef7] mb-8 tracking-widest uppercase">
+      <div className="relative flex flex-col items-center px-8 py-24 text-center overflow-hidden">
+        <FloatingPaths position={1} />
+        <FloatingPaths position={-1} />
+        <div className="relative z-10 flex flex-col items-center w-full">
+        <div className="text-[11px] font-mono px-3 py-1 rounded-full bg-[#262200] text-[#FEED55] mb-8 tracking-widest uppercase">
           AI-Powered CPA Workflow
         </div>
 
         <h1 className="text-[52px] font-semibold tracking-tight text-white leading-tight max-w-3xl mb-6">
           Everything around the accounting,{" "}
-          <span className="text-[#4f8ef7]">handled.</span>
+          <SpecialText className="text-[52px] font-semibold tracking-tight text-[#FEED55] leading-tight">handled.</SpecialText>
         </h1>
 
         <p className="text-[17px] text-[#555] max-w-xl leading-relaxed mb-10">
@@ -127,7 +132,7 @@ export default function HomePage() {
                 <div className="p-5">
                   <pre className="text-[13px] text-[#ccc] leading-relaxed whitespace-pre-wrap font-sans">{response}</pre>
                   <div className="mt-4 pt-4 border-t border-[#1a1a1e] flex items-center gap-3">
-                    <Link href="/dashboard" className="px-4 py-2 rounded-[7px] text-[13px] font-medium bg-[#4f8ef7] text-white hover:bg-[#5d99ff] transition-all">
+                    <Link href="/dashboard" className="px-4 py-2 rounded-[7px] text-[13px] font-medium bg-[#FEED55] text-[#0d0d0f] hover:bg-[#ffe566] transition-all">
                       Use this in Clerq →
                     </Link>
                     <span className="text-[12px] text-[#444]">Sign up to send, log, and track all client emails</span>
@@ -150,6 +155,7 @@ export default function HomePage() {
               <div className="text-[13px] text-[#444]">{stat.label}</div>
             </div>
           ))}
+        </div>
         </div>
       </div>
 
@@ -189,7 +195,7 @@ export default function HomePage() {
           <div className="text-[14px] text-[#555] mb-6 leading-relaxed">
             Setup in under 30 minutes. No IT department required. Cancel anytime.
           </div>
-          <Link href="/dashboard" className="px-6 py-3 rounded-[8px] text-[14px] font-medium bg-[#4f8ef7] text-white hover:bg-[#5d99ff] transition-all inline-block">
+          <Link href="/dashboard" className="px-6 py-3 rounded-[8px] text-[14px] font-medium bg-[#FEED55] text-[#0d0d0f] hover:bg-[#ffe566] transition-all inline-block">
             Start free — $49/mo after trial
           </Link>
           <div className="text-[11px] text-[#333] mt-4">No credit card required for trial</div>
@@ -199,7 +205,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t border-[#1e1e22] px-8 py-5 flex items-center justify-between">
         <div className="text-[13px] font-semibold text-white">
-          cler<span className="text-[#4f8ef7]">q</span>
+          cler<span className="text-[#FEED55]">q</span>
         </div>
         <div className="text-[12px] text-[#333]">© 2026 Clerq. Built for solo CPAs.</div>
         <div className="flex items-center gap-4 text-[12px] text-[#444]">

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
+import NewInvoiceModal from "@/components/ui/new-invoice-modal"
 
 type Invoice = {
   id: string
@@ -49,6 +50,8 @@ export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<"all" | "unpaid" | "overdue" | "paid">("all")
+  const [showModal, setShowModal] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     const supabase = createClient()
@@ -74,7 +77,7 @@ export default function InvoicesPage() {
         }
         setLoading(false)
       })
-  }, [])
+  }, [refreshKey])
 
   const filtered = filter === "all" ? invoices : invoices.filter(i => i.status === filter)
 
@@ -91,7 +94,7 @@ export default function InvoicesPage() {
       <div className="w-[220px] flex-shrink-0 bg-[#111113] border-r border-[#1e1e22] flex flex-col py-5">
         <div className="px-5 pb-6 border-b border-[#1e1e22] mb-4">
           <div className="text-[18px] font-semibold tracking-tight text-white">
-            cler<span className="text-[#4f8ef7]">q</span>
+            cler<span className="text-[#FEED55]">q</span>
           </div>
           <div className="text-[11px] text-[#555] mt-0.5 tracking-widest font-mono">CPA WORKFLOW</div>
         </div>
@@ -100,7 +103,7 @@ export default function InvoicesPage() {
           <Link href="/dashboard" className="flex items-center gap-2.5 px-2.5 py-2 rounded-[7px] text-[13.5px] text-[#666] hover:bg-[#1a1a1e] hover:text-[#aaa] transition-all">Dashboard</Link>
           <Link href="/clients" className="flex items-center gap-2.5 px-2.5 py-2 rounded-[7px] text-[13.5px] text-[#666] hover:bg-[#1a1a1e] hover:text-[#aaa] transition-all">Clients</Link>
           <Link href="/organizers" className="flex items-center gap-2.5 px-2.5 py-2 rounded-[7px] text-[13.5px] text-[#666] hover:bg-[#1a1a1e] hover:text-[#aaa] transition-all">Organizers</Link>
-          <Link href="/invoices" className="flex items-center gap-2.5 px-2.5 py-2 rounded-[7px] text-[13.5px] bg-[#1c2538] text-[#6a9fff]">Invoices</Link>
+          <Link href="/invoices" className="flex items-center gap-2.5 px-2.5 py-2 rounded-[7px] text-[13.5px] bg-[#1f1d00] text-[#ffe566]">Invoices</Link>
         </div>
         <div className="px-3 mt-2 mb-2">
           <div className="text-[10px] font-medium text-[#444] tracking-widest uppercase px-2 mb-1">AI Tools</div>
@@ -113,7 +116,7 @@ export default function InvoicesPage() {
         </div>
         <div className="mt-auto px-5 pt-4 border-t border-[#1e1e22]">
           <div className="flex items-center gap-2.5">
-            <div className="w-[30px] h-[30px] rounded-full bg-gradient-to-br from-[#1e3a5f] to-[#4f8ef7] flex items-center justify-center text-[11px] font-semibold text-[#aac8ff]">TR</div>
+            <div className="w-[30px] h-[30px] rounded-full bg-gradient-to-br from-[#262200] to-[#FEED55] flex items-center justify-center text-[11px] font-semibold text-[#fff8d0]">TR</div>
             <div>
               <div className="text-[13px] font-medium text-[#bbb]">Taran R.</div>
               <div className="text-[11px] text-[#555]">Pro plan</div>
@@ -126,7 +129,10 @@ export default function InvoicesPage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex items-center justify-between px-7 py-[18px] border-b border-[#1a1a1e] bg-[#0d0d0f]">
           <div className="text-[15px] font-medium text-[#ddd]">Invoices</div>
-          <button className="px-3.5 py-1.5 rounded-[7px] text-[13px] font-medium bg-[#4f8ef7] text-white hover:bg-[#5d99ff] transition-all">
+          <button
+            onClick={() => setShowModal(true)}
+            className="px-3.5 py-1.5 rounded-[7px] text-[13px] font-medium bg-[#FEED55] text-[#0d0d0f] hover:bg-[#ffe566] transition-all"
+          >
             + New Invoice
           </button>
         </div>
@@ -161,7 +167,7 @@ export default function InvoicesPage() {
                 onClick={() => setFilter(f)}
                 className={`px-3.5 py-1.5 rounded-[7px] text-[12px] font-medium transition-all capitalize ${
                   filter === f
-                    ? "bg-[#1c2538] text-[#6a9fff]"
+                    ? "bg-[#1f1d00] text-[#ffe566]"
                     : "text-[#555] hover:text-[#aaa] hover:bg-[#1a1a1e]"
                 }`}
               >
@@ -199,7 +205,7 @@ export default function InvoicesPage() {
                   <div key={inv.id} className="grid grid-cols-[80px_1fr_100px_100px_100px_120px] px-5 py-3.5 border-b border-[#161618] last:border-0 hover:bg-[#131315] transition-colors items-center">
                     <div className="text-[12px] font-mono text-[#555]">{shortId(inv.id)}</div>
                     <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 rounded-[7px] bg-[#1a2d4a] text-[#4f8ef7] flex items-center justify-center text-[11px] font-semibold flex-shrink-0">
+                      <div className="w-7 h-7 rounded-[7px] bg-[#262200] text-[#FEED55] flex items-center justify-center text-[11px] font-semibold flex-shrink-0">
                         {initials}
                       </div>
                       <div>
@@ -217,7 +223,7 @@ export default function InvoicesPage() {
                         {status.label}
                       </span>
                       {inv.status !== "paid" && (
-                        <button className="text-[11px] px-2 py-0.5 rounded-[5px] bg-[#1a2d4a] text-[#4f8ef7] hover:bg-[#1e3254] transition-all">
+                        <button className="text-[11px] px-2 py-0.5 rounded-[5px] bg-[#262200] text-[#FEED55] hover:bg-[#222000] transition-all">
                           Remind
                         </button>
                       )}
@@ -229,6 +235,13 @@ export default function InvoicesPage() {
           </div>
         </div>
       </div>
+
+      {showModal && (
+        <NewInvoiceModal
+          onClose={() => setShowModal(false)}
+          onSuccess={() => { setRefreshKey(k => k + 1); setLoading(true) }}
+        />
+      )}
     </div>
   )
 }

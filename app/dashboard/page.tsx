@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import Plan from "@/components/ui/agent-plan"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
+import NewClientModal from "@/components/ui/new-client-modal"
 
 type Stats = {
   clientCount: number
@@ -48,6 +49,7 @@ export default function DashboardPage() {
   const [recentClients, setRecentClients] = useState<RecentClient[]>([])
   const [activity, setActivity] = useState<ActivityItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [showNewClient, setShowNewClient] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -100,7 +102,7 @@ export default function DashboardPage() {
       <div className="w-[220px] flex-shrink-0 bg-[#111113] border-r border-[#1e1e22] flex flex-col py-5">
         <div className="px-5 pb-6 border-b border-[#1e1e22] mb-4">
           <div className="text-[18px] font-semibold tracking-tight text-white">
-            cler<span className="text-[#4f8ef7]">q</span>
+            cler<span className="text-[#FEED55]">q</span>
           </div>
           <div className="text-[11px] text-[#555] mt-0.5 tracking-widest font-mono">
             CPA WORKFLOW
@@ -134,7 +136,7 @@ export default function DashboardPage() {
 
         <div className="mt-auto px-5 pt-4 border-t border-[#1e1e22]">
           <div className="flex items-center gap-2.5">
-            <div className="w-[30px] h-[30px] rounded-full bg-gradient-to-br from-[#1e3a5f] to-[#4f8ef7] flex items-center justify-center text-[11px] font-semibold text-[#aac8ff]">
+            <div className="w-[30px] h-[30px] rounded-full bg-gradient-to-br from-[#262200] to-[#FEED55] flex items-center justify-center text-[11px] font-semibold text-[#fff8d0]">
               TR
             </div>
             <div>
@@ -153,7 +155,10 @@ export default function DashboardPage() {
             <button className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-[7px] text-[13px] font-medium text-[#666] border border-[#222] hover:bg-[#1a1a1e] hover:text-[#aaa] transition-all">
               Search
             </button>
-            <button className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-[7px] text-[13px] font-medium bg-[#4f8ef7] text-white hover:bg-[#5d99ff] transition-all">
+            <button
+              onClick={() => setShowNewClient(true)}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-[7px] text-[13px] font-medium bg-[#FEED55] text-[#0d0d0f] hover:bg-[#ffe566] transition-all"
+            >
               + New Client
             </button>
           </div>
@@ -171,7 +176,7 @@ export default function DashboardPage() {
             <div className="bg-[#111113] border border-[#1e1e22] rounded-[10px] overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4 border-b border-[#1a1a1e]">
                 <div className="text-[13px] font-medium text-[#bbb]">Recent Activity</div>
-                <Link href="/clients" className="text-[12px] text-[#4f8ef7] cursor-pointer hover:text-[#5d99ff]">View all</Link>
+                <Link href="/clients" className="text-[12px] text-[#FEED55] cursor-pointer hover:text-[#ffe566]">View all</Link>
               </div>
               {loading ? (
                 <div className="px-5 py-8 text-center text-[12px] text-[#444]">Loading...</div>
@@ -197,7 +202,7 @@ export default function DashboardPage() {
               <div className="bg-[#111113] border border-[#1e1e22] rounded-[10px] overflow-hidden">
                 <div className="flex items-center justify-between px-5 py-4 border-b border-[#1a1a1e]">
                   <div className="text-[13px] font-medium text-[#bbb]">Recent Clients</div>
-                  <Link href="/clients" className="text-[12px] text-[#4f8ef7] cursor-pointer hover:text-[#5d99ff]">All clients</Link>
+                  <Link href="/clients" className="text-[12px] text-[#FEED55] cursor-pointer hover:text-[#ffe566]">All clients</Link>
                 </div>
                 {loading ? (
                   <div className="px-5 py-6 text-center text-[12px] text-[#444]">Loading...</div>
@@ -221,7 +226,7 @@ export default function DashboardPage() {
               <div className="bg-[#111113] border border-[#1e1e22] rounded-[10px] overflow-hidden">
                 <div className="flex items-center justify-between px-5 py-4 border-b border-[#1a1a1e]">
                   <div className="text-[13px] font-medium text-[#bbb]">To-do</div>
-                  <div className="text-[12px] text-[#4f8ef7] cursor-pointer">Add task</div>
+                  <div className="text-[12px] text-[#FEED55] cursor-pointer">Add task</div>
                 </div>
                 <Plan />
               </div>
@@ -229,6 +234,13 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {showNewClient && (
+        <NewClientModal
+          onClose={() => setShowNewClient(false)}
+          onSuccess={() => setShowNewClient(false)}
+        />
+      )}
     </div>
   )
 }
@@ -242,7 +254,7 @@ function NavItem({ label, href, active, badge, badgeColor }: {
 }) {
   return (
     <Link href={href} className={`flex items-center gap-2.5 px-2.5 py-2 rounded-[7px] text-[13.5px] transition-all ${
-      active ? "bg-[#1c2538] text-[#6a9fff]" : "text-[#666] hover:bg-[#1a1a1e] hover:text-[#aaa]"
+      active ? "bg-[#1f1d00] text-[#ffe566]" : "text-[#666] hover:bg-[#1a1a1e] hover:text-[#aaa]"
     }`}>
       {label}
       {badge && (
@@ -278,7 +290,7 @@ function ActivityFeedItem({ dot, text, time }: {
   time: string
 }) {
   const dotColor = {
-    green: "bg-[#34d399]", blue: "bg-[#4f8ef7]", amber: "bg-[#f59e0b]",
+    green: "bg-[#34d399]", blue: "bg-[#FEED55]", amber: "bg-[#f59e0b]",
     purple: "bg-[#a78bfa]", red: "bg-[#f87171]",
   }[dot]
   return (
@@ -301,12 +313,12 @@ function ClientRow({ initials, name, type, status, statusColor, bg }: {
   bg: "blue" | "amber" | "purple" | "green"
 }) {
   const bgColor = {
-    blue: "bg-[#1a2d4a] text-[#4f8ef7]", amber: "bg-[#2a1f0e] text-[#f59e0b]",
+    blue: "bg-[#262200] text-[#FEED55]", amber: "bg-[#2a1f0e] text-[#f59e0b]",
     purple: "bg-[#1e1535] text-[#a78bfa]", green: "bg-[#0f2820] text-[#34d399]",
   }[bg]
   const pillColor = {
     green: "bg-[#0f2820] text-[#34d399]", amber: "bg-[#2a1f0e] text-[#f59e0b]",
-    blue: "bg-[#1a2d4a] text-[#4f8ef7]",
+    blue: "bg-[#262200] text-[#FEED55]",
   }[statusColor]
   return (
     <Link href="/clients" className="flex items-center gap-3 px-5 py-[11px] border-b border-[#161618] last:border-0 hover:bg-[#131315] cursor-pointer transition-all">

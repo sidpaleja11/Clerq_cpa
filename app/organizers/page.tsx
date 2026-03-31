@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
+import SendOrganizerModal from "@/components/ui/send-organizer-modal"
 
 type Organizer = {
   id: string
@@ -19,7 +20,7 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   "completed": { label: "Completed", color: "bg-[#0f2820] text-[#34d399]" },
   "awaiting": { label: "Awaiting docs", color: "bg-[#2a1f0e] text-[#f59e0b]" },
   "pending": { label: "Awaiting docs", color: "bg-[#2a1f0e] text-[#f59e0b]" },
-  "in-progress": { label: "In progress", color: "bg-[#1a2d4a] text-[#4f8ef7]" },
+  "in-progress": { label: "In progress", color: "bg-[#262200] text-[#FEED55]" },
   "not-sent": { label: "Not sent", color: "bg-[#1a1a1e] text-[#555]" },
 }
 
@@ -38,6 +39,8 @@ function formatDate(iso: string | null): string {
 export default function OrganizersPage() {
   const [organizers, setOrganizers] = useState<Organizer[]>([])
   const [loading, setLoading] = useState(true)
+  const [showModal, setShowModal] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     const supabase = createClient()
@@ -61,7 +64,7 @@ export default function OrganizersPage() {
         }
         setLoading(false)
       })
-  }, [])
+  }, [refreshKey])
 
   const total = organizers.filter(o => o.sent_at).length
   const completed = organizers.filter(o => o.status === "completed").length
@@ -74,7 +77,7 @@ export default function OrganizersPage() {
       <div className="w-[220px] flex-shrink-0 bg-[#111113] border-r border-[#1e1e22] flex flex-col py-5">
         <div className="px-5 pb-6 border-b border-[#1e1e22] mb-4">
           <div className="text-[18px] font-semibold tracking-tight text-white">
-            cler<span className="text-[#4f8ef7]">q</span>
+            cler<span className="text-[#FEED55]">q</span>
           </div>
           <div className="text-[11px] text-[#555] mt-0.5 tracking-widest font-mono">CPA WORKFLOW</div>
         </div>
@@ -82,7 +85,7 @@ export default function OrganizersPage() {
           <div className="text-[10px] font-medium text-[#444] tracking-widest uppercase px-2 mb-1">Workspace</div>
           <Link href="/dashboard" className="flex items-center gap-2.5 px-2.5 py-2 rounded-[7px] text-[13.5px] text-[#666] hover:bg-[#1a1a1e] hover:text-[#aaa] transition-all">Dashboard</Link>
           <Link href="/clients" className="flex items-center gap-2.5 px-2.5 py-2 rounded-[7px] text-[13.5px] text-[#666] hover:bg-[#1a1a1e] hover:text-[#aaa] transition-all">Clients</Link>
-          <Link href="/organizers" className="flex items-center gap-2.5 px-2.5 py-2 rounded-[7px] text-[13.5px] bg-[#1c2538] text-[#6a9fff]">Organizers</Link>
+          <Link href="/organizers" className="flex items-center gap-2.5 px-2.5 py-2 rounded-[7px] text-[13.5px] bg-[#1f1d00] text-[#ffe566]">Organizers</Link>
           <Link href="/invoices" className="flex items-center gap-2.5 px-2.5 py-2 rounded-[7px] text-[13.5px] text-[#666] hover:bg-[#1a1a1e] hover:text-[#aaa] transition-all">Invoices</Link>
         </div>
         <div className="px-3 mt-2 mb-2">
@@ -96,7 +99,7 @@ export default function OrganizersPage() {
         </div>
         <div className="mt-auto px-5 pt-4 border-t border-[#1e1e22]">
           <div className="flex items-center gap-2.5">
-            <div className="w-[30px] h-[30px] rounded-full bg-gradient-to-br from-[#1e3a5f] to-[#4f8ef7] flex items-center justify-center text-[11px] font-semibold text-[#aac8ff]">TR</div>
+            <div className="w-[30px] h-[30px] rounded-full bg-gradient-to-br from-[#262200] to-[#FEED55] flex items-center justify-center text-[11px] font-semibold text-[#fff8d0]">TR</div>
             <div>
               <div className="text-[13px] font-medium text-[#bbb]">Taran R.</div>
               <div className="text-[11px] text-[#555]">Pro plan</div>
@@ -109,7 +112,10 @@ export default function OrganizersPage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex items-center justify-between px-7 py-[18px] border-b border-[#1a1a1e] bg-[#0d0d0f]">
           <div className="text-[15px] font-medium text-[#ddd]">Organizers</div>
-          <button className="px-3.5 py-1.5 rounded-[7px] text-[13px] font-medium bg-[#4f8ef7] text-white hover:bg-[#5d99ff] transition-all">
+          <button
+            onClick={() => setShowModal(true)}
+            className="px-3.5 py-1.5 rounded-[7px] text-[13px] font-medium bg-[#FEED55] text-[#0d0d0f] hover:bg-[#ffe566] transition-all"
+          >
             + Send Organizer
           </button>
         </div>
@@ -158,7 +164,7 @@ export default function OrganizersPage() {
                 return (
                   <div key={org.id} className="grid grid-cols-[1fr_80px_80px_100px_120px_140px] px-5 py-3.5 border-b border-[#161618] last:border-0 hover:bg-[#131315] transition-colors items-center">
                     <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 rounded-[7px] bg-[#1a2d4a] text-[#4f8ef7] flex items-center justify-center text-[11px] font-semibold flex-shrink-0">
+                      <div className="w-7 h-7 rounded-[7px] bg-[#262200] text-[#FEED55] flex items-center justify-center text-[11px] font-semibold flex-shrink-0">
                         {initials}
                       </div>
                       <div className="text-[13px] text-[#ccc]">{org.client_name}</div>
@@ -173,7 +179,7 @@ export default function OrganizersPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       {!org.sent_at && (
-                        <button className="text-[11px] px-2.5 py-1 rounded-[5px] bg-[#1a2d4a] text-[#4f8ef7] hover:bg-[#1e3254] transition-all">
+                        <button className="text-[11px] px-2.5 py-1 rounded-[5px] bg-[#262200] text-[#FEED55] hover:bg-[#222000] transition-all">
                           Send
                         </button>
                       )}
@@ -195,6 +201,13 @@ export default function OrganizersPage() {
           </div>
         </div>
       </div>
+
+      {showModal && (
+        <SendOrganizerModal
+          onClose={() => setShowModal(false)}
+          onSuccess={() => { setRefreshKey(k => k + 1); setLoading(true) }}
+        />
+      )}
     </div>
   )
 }
