@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import * as AvatarPrimitive from '@radix-ui/react-avatar';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { createClient } from '@/lib/supabase/client';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -24,17 +25,6 @@ export interface Client {
   clientSince: string;
 }
 
-export const clients: Client[] = [
-  { id: '1', name: 'Sarah Chen', email: 'sarah@chenfreelance.com', entityType: '1040', filingStatus: 'Single', status: 'active', serviceLevel: 'Tax + Advisory', clientSince: '2022-03-01' },
-  { id: '2', name: 'Marcus Webb', email: 'marcus@webbsolutions.com', entityType: '1120-S', filingStatus: 'S-Corp', status: 'docs-due', serviceLevel: 'Tax Only', clientSince: '2021-11-15' },
-  { id: '3', name: 'Priya Nair', email: 'priya@nairllc.com', entityType: '1065', filingStatus: 'Partnership', status: 'review', serviceLevel: 'Tax + Bookkeeping', clientSince: '2023-01-10' },
-  { id: '4', name: 'David Kim', email: 'david@kimconsulting.com', entityType: '1040', filingStatus: 'MFJ', status: 'irs-notice', serviceLevel: 'Tax Only', clientSince: '2020-06-22' },
-  { id: '5', name: 'Jordan Lee', email: 'jordan@leecreative.io', entityType: '1040', filingStatus: 'Single', status: 'active', serviceLevel: 'Tax + Advisory', clientSince: '2023-04-05' },
-  { id: '6', name: 'Aisha Patel', email: 'aisha@patelbakery.com', entityType: '1120-S', filingStatus: 'S-Corp', status: 'active', serviceLevel: 'Tax + Bookkeeping', clientSince: '2022-08-19' },
-  { id: '7', name: 'Tom Rivera', email: 'tom@riveraproperties.com', entityType: '1065', filingStatus: 'Partnership', status: 'docs-due', serviceLevel: 'Tax Only', clientSince: '2021-02-28' },
-  { id: '8', name: 'Nina Zhao', email: 'nina@zhaodesign.com', entityType: '1040', filingStatus: 'Single', status: 'active', serviceLevel: 'Tax + Advisory', clientSince: '2023-09-12' },
-];
-
 const statusConfig = {
   'active': { label: 'Active', color: 'bg-[#0f2820] text-[#34d399]' },
   'docs-due': { label: 'Docs due', color: 'bg-[#2a1f0e] text-[#f59e0b]' },
@@ -42,6 +32,13 @@ const statusConfig = {
   'irs-notice': { label: 'IRS notice', color: 'bg-[#2a1010] text-[#f87171]' },
   'inactive': { label: 'Inactive', color: 'bg-[#1a1a1e] text-[#555]' },
 };
+
+function displayEntityType(raw: string): string {
+  const map: Record<string, string> = {
+    '1040': '1040', '1120': '1120', '1120s': '1120-S', '1065': '1065', '1041': '1041',
+  };
+  return map[raw?.toLowerCase()] ?? raw ?? '—';
+}
 
 function Avatar({ className, ...props }: React.ComponentProps<typeof AvatarPrimitive.Root>) {
   return (
@@ -67,7 +64,7 @@ function AvatarFallback({ className, ...props }: React.ComponentProps<typeof Ava
 
 function ClientRow({ client }: { client: Client }) {
   const status = statusConfig[client.status];
-  const initials = client.name.split(' ').map(n => n[0]).join('');
+  const initials = client.name.split(' ').map(n => n[0]).join('').slice(0, 2);
 
   return (
     <div className="w-full flex items-center py-3 px-6 border-b border-[#161618] hover:bg-[#131315] text-sm last:border-b-0 cursor-pointer transition-colors">
@@ -96,22 +93,56 @@ function ClientRow({ client }: { client: Client }) {
 }
 
 const MemberList = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('w-full h-full bg-[#0d0d0f]', className)} {...props}>
-      <div className="px-6 py-3 text-xs flex items-center text-[#444] border-b border-[#1e1e22] sticky top-0 bg-[#0d0d0f] z-10">
-        <div className="flex-grow">Client</div>
-        <div className="w-28 shrink-0">Entity</div>
-        <div className="w-40 shrink-0">Services</div>
-        <div className="w-32 shrink-0">Client since</div>
-        <div className="w-32 shrink-0">Status</div>
+  ({ className, ...props }, ref) => {
+    const [clients, setClients] = useState<Client[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+      const supabase = createClient();
+      supabase
+        .from('clients')
+        .select('id, name, email, entity_type, filing_status, service_level, created_at')
+        .order('created_at', { ascending: false })
+        .then(({ data }) => {
+          if (data) {
+            setClients(data.map(c => ({
+              id: c.id,
+              name: c.name,
+              email: c.email ?? '',
+              entityType: displayEntityType(c.entity_type ?? ''),
+              filingStatus: c.filing_status ?? '—',
+              status: 'active' as const,
+              serviceLevel: c.service_level ?? '—',
+              clientSince: c.created_at,
+            })));
+          }
+          setLoading(false);
+        });
+    }, []);
+
+    return (
+      <div ref={ref} className={cn('w-full h-full bg-[#0d0d0f]', className)} {...props}>
+        <div className="px-6 py-3 text-xs flex items-center text-[#444] border-b border-[#1e1e22] sticky top-0 bg-[#0d0d0f] z-10">
+          <div className="flex-grow">Client</div>
+          <div className="w-28 shrink-0">Entity</div>
+          <div className="w-40 shrink-0">Services</div>
+          <div className="w-32 shrink-0">Client since</div>
+          <div className="w-32 shrink-0">Status</div>
+        </div>
+        {loading ? (
+          <div className="px-6 py-10 text-center text-[12px] text-[#444]">Loading clients...</div>
+        ) : clients.length === 0 ? (
+          <div className="px-6 py-10 text-center text-[12px] text-[#444]">No clients yet. Add your first client to get started.</div>
+        ) : (
+          <div className="w-full">
+            {clients.map((client) => (
+              <ClientRow key={client.id} client={client} />
+            ))}
+          </div>
+        )}
       </div>
-      <div className="w-full">
-        {clients.map((client) => (
-          <ClientRow key={client.id} client={client} />
-        ))}
-      </div>
-    </div>
-  )
+    );
+  }
 );
 MemberList.displayName = 'MemberList';
 

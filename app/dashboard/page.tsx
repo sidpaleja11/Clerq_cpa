@@ -1,9 +1,99 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Plan from "@/components/ui/agent-plan"
 import Link from "next/link"
+import { createClient } from "@/lib/supabase/client"
+
+type Stats = {
+  clientCount: number
+  openOrganizers: number
+  unpaidAmount: number
+  emailsDrafted: number
+}
+
+type RecentClient = {
+  id: string
+  name: string
+  entity_type: string | null
+  service_level: string | null
+}
+
+type ActivityItem = {
+  id: string
+  client_name: string
+  body: string | null
+  ai_drafted: boolean
+  sent_at: string
+}
+
+function displayEntityType(raw: string | null): string {
+  const map: Record<string, string> = {
+    '1040': '1040', '1120': '1120', '1120s': '1120-S', '1065': '1065', '1041': '1041',
+  }
+  return raw ? (map[raw.toLowerCase()] ?? raw) : '—'
+}
+
+function formatTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 60) return `${mins} min ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs} hr ago`
+  return `${Math.floor(hrs / 24)}d ago`
+}
 
 export default function DashboardPage() {
+  const [stats, setStats] = useState<Stats>({ clientCount: 0, openOrganizers: 0, unpaidAmount: 0, emailsDrafted: 0 })
+  const [recentClients, setRecentClients] = useState<RecentClient[]>([])
+  const [activity, setActivity] = useState<ActivityItem[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function load() {
+      const supabase = createClient()
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+
+      const [
+        { count: clientCount },
+        { count: openOrganizers },
+        { data: unpaidInvoices },
+        { count: emailsDrafted },
+        { data: clients },
+        { data: comms },
+      ] = await Promise.all([
+        supabase.from('clients').select('*', { count: 'exact', head: true }),
+        supabase.from('organizers').select('*', { count: 'exact', head: true }).neq('status', 'completed'),
+        supabase.from('invoices').select('amount').is('paid_at', null),
+        supabase.from('communications').select('*', { count: 'exact', head: true }).eq('ai_drafted', true).gte('sent_at', weekAgo),
+        supabase.from('clients').select('id, name, entity_type, service_level').order('created_at', { ascending: false }).limit(4),
+        supabase.from('communications').select('id, body, ai_drafted, sent_at, clients(name)').order('sent_at', { ascending: false }).limit(6),
+      ])
+
+      const unpaidTotal = unpaidInvoices?.reduce((sum, inv) => sum + (inv.amount ?? 0), 0) ?? 0
+
+      setStats({
+        clientCount: clientCount ?? 0,
+        openOrganizers: openOrganizers ?? 0,
+        unpaidAmount: unpaidTotal,
+        emailsDrafted: emailsDrafted ?? 0,
+      })
+      setRecentClients(clients ?? [])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setActivity((comms ?? []).map((c: any) => ({
+        id: c.id,
+        client_name: c.clients?.name ?? 'Unknown client',
+        body: c.body,
+        ai_drafted: c.ai_drafted,
+        sent_at: c.sent_at,
+      })))
+      setLoading(false)
+    }
+    load()
+  }, [])
+
+  const formatMoney = (n: number) => n >= 1000 ? `$${(n / 1000).toFixed(1)}k` : `$${n}`
+
   return (
     <div className="flex h-screen bg-[#0d0d0f] text-[#e8e8ea] font-sans overflow-hidden">
       {/* SIDEBAR */}
@@ -22,9 +112,9 @@ export default function DashboardPage() {
             Workspace
           </div>
           <NavItem label="Dashboard" href="/dashboard" active badge={null} />
-          <NavItem label="Clients" href="/clients" badge="47" badgeColor="amber" />
-          <NavItem label="Organizers" href="/organizers" badge="12" badgeColor="purple" />
-          <NavItem label="Invoices" href="/invoices" badge="3" badgeColor="amber" />
+          <NavItem label="Clients" href="/clients" badge={!loading && stats.clientCount > 0 ? String(stats.clientCount) : null} badgeColor="amber" />
+          <NavItem label="Organizers" href="/organizers" badge={!loading && stats.openOrganizers > 0 ? String(stats.openOrganizers) : null} badgeColor="purple" />
+          <NavItem label="Invoices" href="/invoices" badge={null} />
         </div>
 
         <div className="px-3 mt-2 mb-2">
@@ -71,10 +161,10 @@ export default function DashboardPage() {
 
         <div className="flex-1 overflow-y-auto p-7">
           <div className="grid grid-cols-4 gap-3.5 mb-7">
-            <StatCard label="Active Clients" value="47" delta="↑ 3 this month" deltaColor="green" />
-            <StatCard label="Open Organizers" value="12" delta="4 awaiting docs" deltaColor="amber" />
-            <StatCard label="Unpaid Invoices" value="$8.4k" delta="3 overdue" deltaColor="amber" />
-            <StatCard label="Emails Drafted" value="31" delta="this week" deltaColor="neutral" />
+            <StatCard label="Active Clients" value={loading ? "—" : String(stats.clientCount)} delta="" deltaColor="neutral" />
+            <StatCard label="Open Organizers" value={loading ? "—" : String(stats.openOrganizers)} delta={!loading && stats.openOrganizers > 0 ? "awaiting docs" : ""} deltaColor="amber" />
+            <StatCard label="Unpaid Invoices" value={loading ? "—" : formatMoney(stats.unpaidAmount)} delta="" deltaColor="amber" />
+            <StatCard label="Emails Drafted" value={loading ? "—" : String(stats.emailsDrafted)} delta="this week" deltaColor="neutral" />
           </div>
 
           <div className="grid grid-cols-[1fr_340px] gap-4">
@@ -83,12 +173,24 @@ export default function DashboardPage() {
                 <div className="text-[13px] font-medium text-[#bbb]">Recent Activity</div>
                 <Link href="/clients" className="text-[12px] text-[#4f8ef7] cursor-pointer hover:text-[#5d99ff]">View all</Link>
               </div>
-              <ActivityItem dot="green" text={<><strong className="text-[#e8e8ea] font-medium">Sarah Chen</strong> completed organizer</>} time="2 min ago" />
-              <ActivityItem dot="blue" text={<>AI drafted email to <strong className="text-[#e8e8ea] font-medium">Marcus Webb</strong> re: missing W-2</>} time="14 min ago" />
-              <ActivityItem dot="amber" text={<><strong className="text-[#e8e8ea] font-medium">Invoice #1042</strong> overdue — $2,400</>} time="1 hr ago" />
-              <ActivityItem dot="purple" text={<>Engagement letter signed by <strong className="text-[#e8e8ea] font-medium">Priya Nair</strong></>} time="3 hr ago" />
-              <ActivityItem dot="red" text={<><strong className="text-[#e8e8ea] font-medium">David Kim</strong> — IRS notice received, deadline Apr 12</>} time="Yesterday" />
-              <ActivityItem dot="green" text={<><strong className="text-[#e8e8ea] font-medium">Invoice #1038</strong> paid — $3,200</>} time="Yesterday" />
+              {loading ? (
+                <div className="px-5 py-8 text-center text-[12px] text-[#444]">Loading...</div>
+              ) : activity.length === 0 ? (
+                <div className="px-5 py-8 text-center text-[12px] text-[#444]">No recent activity. Activity will appear here as you use the platform.</div>
+              ) : (
+                activity.map(a => (
+                  <ActivityFeedItem
+                    key={a.id}
+                    dot={a.ai_drafted ? "blue" : "green"}
+                    text={
+                      a.ai_drafted
+                        ? <><strong className="text-[#e8e8ea] font-medium">{a.client_name}</strong> — AI drafted email</>
+                        : <><strong className="text-[#e8e8ea] font-medium">{a.client_name}</strong> — {a.body?.slice(0, 50)}{(a.body?.length ?? 0) > 50 ? '…' : ''}</>
+                    }
+                    time={formatTime(a.sent_at)}
+                  />
+                ))
+              )}
             </div>
 
             <div className="flex flex-col gap-4">
@@ -97,10 +199,23 @@ export default function DashboardPage() {
                   <div className="text-[13px] font-medium text-[#bbb]">Recent Clients</div>
                   <Link href="/clients" className="text-[12px] text-[#4f8ef7] cursor-pointer hover:text-[#5d99ff]">All clients</Link>
                 </div>
-                <ClientRow initials="SC" name="Sarah Chen" type="Freelancer · 1040" status="Active" statusColor="green" bg="blue" />
-                <ClientRow initials="MW" name="Marcus Webb" type="S-Corp · 1120-S" status="Docs due" statusColor="amber" bg="amber" />
-                <ClientRow initials="PN" name="Priya Nair" type="LLC · 1065" status="Review" statusColor="blue" bg="purple" />
-                <ClientRow initials="DK" name="David Kim" type="Sole prop · 1040" status="IRS notice" statusColor="amber" bg="green" />
+                {loading ? (
+                  <div className="px-5 py-6 text-center text-[12px] text-[#444]">Loading...</div>
+                ) : recentClients.length === 0 ? (
+                  <div className="px-5 py-6 text-center text-[12px] text-[#444]">No clients yet.</div>
+                ) : (
+                  recentClients.map(c => (
+                    <ClientRow
+                      key={c.id}
+                      initials={c.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                      name={c.name}
+                      type={`${c.service_level ?? '—'} · ${displayEntityType(c.entity_type)}`}
+                      status="Active"
+                      statusColor="green"
+                      bg="blue"
+                    />
+                  ))
+                )}
               </div>
 
               <div className="bg-[#111113] border border-[#1e1e22] rounded-[10px] overflow-hidden">
@@ -152,12 +267,12 @@ function StatCard({ label, value, delta, deltaColor }: {
     <div className="bg-[#111113] border border-[#1e1e22] rounded-[10px] p-5 hover:border-[#2a2a30] hover:bg-[#141416] transition-all cursor-pointer">
       <div className="text-[12px] text-[#555] mb-2.5">{label}</div>
       <div className="text-[26px] font-semibold font-mono tracking-tight text-[#e8e8ea] leading-none mb-2">{value}</div>
-      <div className={`text-[11.5px] ${color}`}>{delta}</div>
+      {delta && <div className={`text-[11.5px] ${color}`}>{delta}</div>}
     </div>
   )
 }
 
-function ActivityItem({ dot, text, time }: {
+function ActivityFeedItem({ dot, text, time }: {
   dot: "green" | "blue" | "amber" | "purple" | "red"
   text: React.ReactNode
   time: string

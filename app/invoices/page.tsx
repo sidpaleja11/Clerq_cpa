@@ -1,18 +1,21 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
+import { createClient } from "@/lib/supabase/client"
 
-const INVOICES = [
-  { id: "INV-1042", client: "David Kim", entity: "1040", amount: 2400, issued: "Mar 1", due: "Mar 15", status: "overdue", paid: null, service: "Tax Preparation" },
-  { id: "INV-1041", client: "Aisha Patel", entity: "1120-S", amount: 3200, issued: "Mar 1", due: "Mar 15", status: "overdue", paid: null, service: "Tax + Bookkeeping" },
-  { id: "INV-1043", client: "Tom Rivera", entity: "1065", amount: 4100, issued: "Mar 5", due: "Mar 30", status: "unpaid", paid: null, service: "Partnership Return" },
-  { id: "INV-1044", client: "Marcus Webb", entity: "1120-S", amount: 2800, issued: "Mar 8", due: "Apr 1", status: "unpaid", paid: null, service: "Tax Preparation" },
-  { id: "INV-1045", client: "Nina Zhao", entity: "1040", amount: 1800, issued: "Mar 10", due: "Apr 5", status: "unpaid", paid: null, service: "Tax + Advisory" },
-  { id: "INV-1038", client: "Sarah Chen", entity: "1040", amount: 3200, issued: "Feb 15", due: "Mar 1", status: "paid", paid: "Mar 1", service: "Tax Preparation" },
-  { id: "INV-1039", client: "Jordan Lee", entity: "1040", amount: 1600, issued: "Feb 20", due: "Mar 5", status: "paid", paid: "Mar 3", service: "Tax Preparation" },
-  { id: "INV-1040", client: "Priya Nair", entity: "1065", amount: 4800, issued: "Feb 25", due: "Mar 10", status: "paid", paid: "Mar 8", service: "Partnership Return" },
-]
+type Invoice = {
+  id: string
+  client_id: string
+  client_name: string
+  entity_type: string
+  amount: number
+  due_date: string | null
+  paid_at: string | null
+  created_at: string
+  reminder_count: number
+  status: "paid" | "overdue" | "unpaid"
+}
 
 const statusConfig = {
   "overdue": { label: "Overdue", color: "bg-[#2a1010] text-[#f87171]" },
@@ -20,15 +23,65 @@ const statusConfig = {
   "paid": { label: "Paid", color: "bg-[#0f2820] text-[#34d399]" },
 }
 
+function displayEntityType(raw: string | null): string {
+  const map: Record<string, string> = {
+    '1040': '1040', '1120': '1120', '1120s': '1120-S', '1065': '1065', '1041': '1041',
+  }
+  return raw ? (map[raw.toLowerCase()] ?? raw) : '—'
+}
+
+function deriveStatus(paid_at: string | null, due_date: string | null): "paid" | "overdue" | "unpaid" {
+  if (paid_at) return "paid"
+  if (due_date && new Date(due_date) < new Date()) return "overdue"
+  return "unpaid"
+}
+
+function formatDate(iso: string | null): string {
+  if (!iso) return "—"
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+}
+
+function shortId(uuid: string): string {
+  return `INV-${uuid.slice(-4).toUpperCase()}`
+}
+
 export default function InvoicesPage() {
+  const [invoices, setInvoices] = useState<Invoice[]>([])
+  const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<"all" | "unpaid" | "overdue" | "paid">("all")
 
-  const totalOutstanding = INVOICES.filter(i => i.status !== "paid").reduce((sum, i) => sum + i.amount, 0)
-  const totalOverdue = INVOICES.filter(i => i.status === "overdue").reduce((sum, i) => sum + i.amount, 0)
-  const totalPaid = INVOICES.filter(i => i.status === "paid").reduce((sum, i) => sum + i.amount, 0)
-  const overdueCount = INVOICES.filter(i => i.status === "overdue").length
+  useEffect(() => {
+    const supabase = createClient()
+    supabase
+      .from('invoices')
+      .select('id, client_id, amount, due_date, paid_at, reminder_count, created_at, clients(name, entity_type)')
+      .order('created_at', { ascending: false })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .then(({ data }) => {
+        if (data) {
+          setInvoices(data.map((inv: any) => ({
+            id: inv.id,
+            client_id: inv.client_id,
+            client_name: inv.clients?.name ?? 'Unknown',
+            entity_type: displayEntityType(inv.clients?.entity_type),
+            amount: inv.amount ?? 0,
+            due_date: inv.due_date,
+            paid_at: inv.paid_at,
+            created_at: inv.created_at,
+            reminder_count: inv.reminder_count ?? 0,
+            status: deriveStatus(inv.paid_at, inv.due_date),
+          })))
+        }
+        setLoading(false)
+      })
+  }, [])
 
-  const filtered = filter === "all" ? INVOICES : INVOICES.filter(i => i.status === filter)
+  const filtered = filter === "all" ? invoices : invoices.filter(i => i.status === filter)
+
+  const totalOutstanding = invoices.filter(i => i.status !== "paid").reduce((sum, i) => sum + i.amount, 0)
+  const totalOverdue = invoices.filter(i => i.status === "overdue").reduce((sum, i) => sum + i.amount, 0)
+  const totalPaid = invoices.filter(i => i.status === "paid").reduce((sum, i) => sum + i.amount, 0)
+  const overdueCount = invoices.filter(i => i.status === "overdue").length
 
   const formatMoney = (n: number) => `$${n.toLocaleString()}`
 
@@ -83,20 +136,20 @@ export default function InvoicesPage() {
           <div className="grid grid-cols-4 gap-3.5 mb-7">
             <div className="bg-[#111113] border border-[#1e1e22] rounded-[10px] p-5">
               <div className="text-[12px] text-[#555] mb-2">Outstanding</div>
-              <div className="text-[26px] font-semibold font-mono tracking-tight text-[#e8e8ea]">{formatMoney(totalOutstanding)}</div>
+              <div className="text-[26px] font-semibold font-mono tracking-tight text-[#e8e8ea]">{loading ? "—" : formatMoney(totalOutstanding)}</div>
             </div>
             <div className="bg-[#111113] border border-[#1e1e22] rounded-[10px] p-5">
               <div className="text-[12px] text-[#555] mb-2">Overdue</div>
-              <div className="text-[26px] font-semibold font-mono tracking-tight text-[#f87171]">{formatMoney(totalOverdue)}</div>
-              <div className="text-[11px] text-[#f87171] mt-1">{overdueCount} invoices</div>
+              <div className="text-[26px] font-semibold font-mono tracking-tight text-[#f87171]">{loading ? "—" : formatMoney(totalOverdue)}</div>
+              {!loading && overdueCount > 0 && <div className="text-[11px] text-[#f87171] mt-1">{overdueCount} invoice{overdueCount !== 1 ? 's' : ''}</div>}
             </div>
             <div className="bg-[#111113] border border-[#1e1e22] rounded-[10px] p-5">
-              <div className="text-[12px] text-[#555] mb-2">Collected this month</div>
-              <div className="text-[26px] font-semibold font-mono tracking-tight text-[#34d399]">{formatMoney(totalPaid)}</div>
+              <div className="text-[12px] text-[#555] mb-2">Collected</div>
+              <div className="text-[26px] font-semibold font-mono tracking-tight text-[#34d399]">{loading ? "—" : formatMoney(totalPaid)}</div>
             </div>
             <div className="bg-[#111113] border border-[#1e1e22] rounded-[10px] p-5">
               <div className="text-[12px] text-[#555] mb-2">Total invoices</div>
-              <div className="text-[26px] font-semibold font-mono tracking-tight text-[#e8e8ea]">{INVOICES.length}</div>
+              <div className="text-[26px] font-semibold font-mono tracking-tight text-[#e8e8ea]">{loading ? "—" : invoices.length}</div>
             </div>
           </div>
 
@@ -112,61 +165,67 @@ export default function InvoicesPage() {
                     : "text-[#555] hover:text-[#aaa] hover:bg-[#1a1a1e]"
                 }`}
               >
-                {f === "all" ? `All (${INVOICES.length})` :
-                 f === "overdue" ? `Overdue (${INVOICES.filter(i => i.status === "overdue").length})` :
-                 f === "unpaid" ? `Unpaid (${INVOICES.filter(i => i.status === "unpaid").length})` :
-                 `Paid (${INVOICES.filter(i => i.status === "paid").length})`}
+                {f === "all" ? `All (${invoices.length})` :
+                 f === "overdue" ? `Overdue (${invoices.filter(i => i.status === "overdue").length})` :
+                 f === "unpaid" ? `Unpaid (${invoices.filter(i => i.status === "unpaid").length})` :
+                 `Paid (${invoices.filter(i => i.status === "paid").length})`}
               </button>
             ))}
           </div>
 
           {/* Table */}
           <div className="bg-[#111113] border border-[#1e1e22] rounded-[10px] overflow-hidden">
-            <div className="grid grid-cols-[80px_1fr_120px_100px_100px_100px_120px] px-5 py-3 border-b border-[#1a1a1e] text-[11px] text-[#444] uppercase tracking-widest">
+            <div className="grid grid-cols-[80px_1fr_100px_100px_100px_120px] px-5 py-3 border-b border-[#1a1a1e] text-[11px] text-[#444] uppercase tracking-widest">
               <div>Invoice</div>
               <div>Client</div>
-              <div>Service</div>
               <div>Amount</div>
               <div>Issued</div>
               <div>Due</div>
               <div>Status</div>
             </div>
 
-            {filtered.map((inv) => {
-              const status = statusConfig[inv.status as keyof typeof statusConfig]
-              const initials = inv.client.split(" ").map(n => n[0]).join("")
+            {loading ? (
+              <div className="px-5 py-10 text-center text-[12px] text-[#444]">Loading invoices...</div>
+            ) : filtered.length === 0 ? (
+              <div className="px-5 py-10 text-center text-[12px] text-[#444]">
+                {invoices.length === 0 ? "No invoices yet." : `No ${filter} invoices.`}
+              </div>
+            ) : (
+              filtered.map((inv) => {
+                const status = statusConfig[inv.status]
+                const initials = inv.client_name.split(" ").map(n => n[0]).join("").slice(0, 2)
 
-              return (
-                <div key={inv.id} className="grid grid-cols-[80px_1fr_120px_100px_100px_100px_120px] px-5 py-3.5 border-b border-[#161618] last:border-0 hover:bg-[#131315] transition-colors items-center">
-                  <div className="text-[12px] font-mono text-[#555]">{inv.id}</div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-[7px] bg-[#1a2d4a] text-[#4f8ef7] flex items-center justify-center text-[11px] font-semibold flex-shrink-0">
-                      {initials}
+                return (
+                  <div key={inv.id} className="grid grid-cols-[80px_1fr_100px_100px_100px_120px] px-5 py-3.5 border-b border-[#161618] last:border-0 hover:bg-[#131315] transition-colors items-center">
+                    <div className="text-[12px] font-mono text-[#555]">{shortId(inv.id)}</div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-[7px] bg-[#1a2d4a] text-[#4f8ef7] flex items-center justify-center text-[11px] font-semibold flex-shrink-0">
+                        {initials}
+                      </div>
+                      <div>
+                        <div className="text-[13px] text-[#ccc]">{inv.client_name}</div>
+                        <div className="text-[11px] text-[#444]">{inv.entity_type}</div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="text-[13px] text-[#ccc]">{inv.client}</div>
-                      <div className="text-[11px] text-[#444]">{inv.entity}</div>
+                    <div className="text-[13px] font-mono font-medium text-[#e8e8ea]">{formatMoney(inv.amount)}</div>
+                    <div className="text-[12px] text-[#555]">{formatDate(inv.created_at)}</div>
+                    <div className={`text-[12px] ${inv.status === "overdue" ? "text-[#f87171]" : "text-[#555]"}`}>
+                      {formatDate(inv.due_date)}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10.5px] font-semibold font-mono px-2 py-0.5 rounded-[5px] ${status.color}`}>
+                        {status.label}
+                      </span>
+                      {inv.status !== "paid" && (
+                        <button className="text-[11px] px-2 py-0.5 rounded-[5px] bg-[#1a2d4a] text-[#4f8ef7] hover:bg-[#1e3254] transition-all">
+                          Remind
+                        </button>
+                      )}
                     </div>
                   </div>
-                  <div className="text-[12px] text-[#555]">{inv.service}</div>
-                  <div className="text-[13px] font-mono font-medium text-[#e8e8ea]">{formatMoney(inv.amount)}</div>
-                  <div className="text-[12px] text-[#555]">{inv.issued}</div>
-                  <div className={`text-[12px] ${inv.status === "overdue" ? "text-[#f87171]" : "text-[#555]"}`}>
-                    {inv.due}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`text-[10.5px] font-semibold font-mono px-2 py-0.5 rounded-[5px] ${status.color}`}>
-                      {status.label}
-                    </span>
-                    {inv.status !== "paid" && (
-                      <button className="text-[11px] px-2 py-0.5 rounded-[5px] bg-[#1a2d4a] text-[#4f8ef7] hover:bg-[#1e3254] transition-all">
-                        Remind
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
+                )
+              })
+            )}
           </div>
         </div>
       </div>

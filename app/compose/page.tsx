@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { PromptInputBox } from '@/components/ui/ai-prompt-box'
@@ -20,18 +20,17 @@ const EMAIL_TYPES = [
   { id: 'fee_reminder', label: 'Fee Reminder' },
 ]
 
-const CLIENTS = [
-  { id: '1', name: 'Sarah Chen', entityType: '1040' },
-  { id: '2', name: 'Marcus Webb', entityType: '1120-S' },
-  { id: '3', name: 'Priya Nair', entityType: '1065' },
-  { id: '4', name: 'David Kim', entityType: '1040' },
-  { id: '5', name: 'Jordan Lee', entityType: '1040' },
-  { id: '6', name: 'Aisha Patel', entityType: '1120-S' },
-  { id: '7', name: 'Tom Rivera', entityType: '1065' },
-  { id: '8', name: 'Nina Zhao', entityType: '1040' },
-]
+type ClientOption = { id: string; name: string; entity_type: string | null }
+
+function displayEntityType(raw: string | null): string {
+  const map: Record<string, string> = {
+    '1040': '1040', '1120': '1120', '1120s': '1120-S', '1065': '1065', '1041': '1041',
+  }
+  return raw ? (map[raw.toLowerCase()] ?? raw) : '—'
+}
 
 export default function ComposePage() {
+  const [clients, setClients] = useState<ClientOption[]>([])
   const [clientId, setClientId] = useState('')
   const [emailType, setEmailType] = useState<EmailType>('tax_season_kickoff')
   const [draft, setDraft] = useState('')
@@ -41,7 +40,18 @@ export default function ComposePage() {
   const [sent, setSent] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  const clientName = CLIENTS.find(c => c.id === clientId)?.name ?? ''
+  useEffect(() => {
+    const supabase = createClient()
+    supabase
+      .from('clients')
+      .select('id, name, entity_type')
+      .order('name', { ascending: true })
+      .then(({ data }) => {
+        if (data) setClients(data)
+      })
+  }, [])
+
+  const clientName = clients.find(c => c.id === clientId)?.name ?? ''
 
   async function generateDraft(context: string) {
     if (!clientId) {
@@ -154,8 +164,8 @@ export default function ComposePage() {
                   className="w-full bg-[#111113] border border-[#1e1e22] rounded-[8px] px-3 py-2.5 text-[13px] text-[#ccc] focus:outline-none focus:border-[#4f8ef7] transition-all"
                 >
                   <option value="">Select a client...</option>
-                  {CLIENTS.map(c => (
-                    <option key={c.id} value={c.id}>{c.name} — {c.entityType}</option>
+                  {clients.map(c => (
+                    <option key={c.id} value={c.id}>{c.name} — {displayEntityType(c.entity_type)}</option>
                   ))}
                 </select>
               </div>
